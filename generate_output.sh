@@ -2,8 +2,8 @@
 
 rm output.cpp
 
-headers=`find . -path ./build -prune -o -name "*.hpp" -print`
-sources=`find . -path ./build -prune -o -name "*.cpp" -print`
+headers=`find . -not \( -path ./build -prune \) -not \( -path ./tests -prune \) -name "*.hpp"`
+sources=`find . -not \( -path ./build -prune \) -not \( -path ./tests -prune \) -name "*.cpp"`
 
 touch output.cpp
 
