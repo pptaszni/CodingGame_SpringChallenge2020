@@ -2,7 +2,13 @@
 
 rm output.cpp
 
-headers=`find . -not \( -path ./build -prune \) -not \( -path ./tests -prune \) -name "*.hpp"`
+
+headers="./GameController/include/GameController/Point.hpp
+  ./GameController/include/GameController/Pellet.hpp
+  ./GameController/include/GameController/Pacman.hpp
+  ./GameController/include/GameController/Debug.hpp
+  ./GameController/include/GameController/GameController.hpp"
+# headers=`find . -not \( -path ./build -prune \) -not \( -path ./tests -prune \) -name "*.hpp"`
 sources=`find . -not \( -path ./build -prune \) -not \( -path ./tests -prune \) -name "*.cpp"`
 
 touch output.cpp

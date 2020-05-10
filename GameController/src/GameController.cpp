@@ -1,6 +1,9 @@
 
 #include "GameController/Debug.hpp"
 #include "GameController/GameController.hpp"
+#include "GameController/Pacman.hpp"
+#include "GameController/Pellet.hpp"
+#include "GameController/Point.hpp"
 
 #define BIG_DIST 100000
 
@@ -16,9 +19,11 @@ namespace gamecontroller
 
 GameController::GameController(std::istream& input):
   input_(input),
-  big_one_(false),
-  dest_({0, 0}),
-  alt_dest_({0, 0})
+  my_score_(0),
+  opponent_score_(0),
+  my_pacs_(),
+  opponent_pacs_(),
+  pellets_()
 {
   int width; // size of the grid
   int height; // top left corner is (x=0, y=0)
@@ -32,77 +37,77 @@ GameController::GameController(std::istream& input):
 bool GameController::readInput()
 {
   DEBUG("readInput");
-  int my_pos_x(0);
-  int my_pos_y(0);
-  int myScore;
-  int opponentScore;
-  input_ >> myScore >> opponentScore; input_.ignore();
+  my_pacs_.clear();
+  opponent_pacs_.clear();
+  pellets_.clear();
+  input_ >> my_score_ >> opponent_score_; input_.ignore();
   int visiblePacCount; // all your pacs and enemy pacs in sight
   input_ >> visiblePacCount; input_.ignore();
   DEBUG("reading pacs");
   for (int i = 0; i < visiblePacCount; i++) {
-    int pacId; // pac number (unique within a team)
-    bool mine; // true if this pac is yours
-    int x; // position in the grid
-    int y; // position in the grid
-    std::string typeId; // unused in wood leagues
-    int speedTurnsLeft; // unused in wood leagues
-    int abilityCooldown; // unused in wood leagues
-    input_ >> pacId >> mine >> x >> y >> typeId >> speedTurnsLeft >> abilityCooldown; input_.ignore();
-    if (mine)
+    Pacman p;
+    input_ >> p; input_.ignore();
+    if (p.mine)
     {
-      my_pos_x = x;
-      my_pos_y = y;
-    }
-  }
-  int visiblePelletCount; // all pellets in sight
-  int distance = BIG_DIST;
-  int alt_distance = BIG_DIST;
-  input_ >> visiblePelletCount; input_.ignore();
-  DEBUG("reading pellets");
-  for (int i = 0; i < visiblePelletCount; i++) {
-    int x;
-    int y;
-    int value; // amount of points this pellet is worth
-    input_ >> x >> y >> value; input_.ignore();
-    if (value == 10)
-    {
-      big_one_ = true;
-      if (dist(my_pos_x, my_pos_y, x, y) < distance)
-      {
-        dest_.x = x;
-        dest_.y = y;
-        distance = dist(my_pos_x, my_pos_y, x, y);
-      }
+      my_pacs_.push_back(p);
     }
     else
     {
-      if (dist(my_pos_x, my_pos_y, x, y) < alt_distance)
-      {
-        alt_dest_.x = x;
-        alt_dest_.y = y;
-        alt_distance = dist(my_pos_x, my_pos_y, x, y);
-      }
+      opponent_pacs_.push_back(p);
     }
+  }
+  int visiblePelletCount; // all pellets in sight
+  input_ >> visiblePelletCount; input_.ignore();
+  DEBUG("reading pellets");
+  for (int i = 0; i < visiblePelletCount; i++) {
+    Pellet p;
+    input_ >> p; input_.ignore();
+    pellets_.push_back(p);
   }
   DEBUG("reading DONE");
   return true;
 }
 
-std::string GameController::computeSolution()
+std::vector<std::string> GameController::computeSolution()
 {
-  std::string result("MOVE 0 ");
-  if (big_one_)
+  std::vector<std::string> result;
+  for (const auto& pack : my_pacs_)
   {
-    result += std::to_string(dest_.x);
-    result += " ";
-    result += std::to_string(dest_.y);
-  }
-  else
-  {
-    result += std::to_string(alt_dest_.x);
-    result += " ";
-    result += std::to_string(alt_dest_.y);
+    int small_distance = BIG_DIST;
+    int big_distance = BIG_DIST;
+    bool big_one = false;
+    Point small_target_({0, 0});
+    Point big_target_({0, 0});
+    for (const auto& pellet : pellets_)
+    {
+      if (pellet.value == 10)
+      {
+        big_one = true;
+        if (distance(pack.position, pellet.position) < big_distance)
+        {
+          big_distance = distance(pack.position, pellet.position);
+          big_target_ = pellet.position;
+        }
+      }
+      else
+      {
+        if (distance(pack.position, pellet.position) < small_distance)
+        {
+          small_distance = distance(pack.position, pellet.position);
+          small_target_ = pellet.position;
+        }
+      }
+    }
+    if (big_one)
+    {
+      result.push_back("MOVE " + std::to_string(pack.id) + " " + std::to_string(big_target_.x)
+        + " " + std::to_string(big_target_.y));
+    }
+    else
+    {
+      result.push_back("MOVE " + std::to_string(pack.id) + " " + std::to_string(small_target_.x)
+        + " " + std::to_string(small_target_.y));
+    }
   }
   return result;
 }
