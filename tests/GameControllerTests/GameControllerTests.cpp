@@ -33,3 +33,19 @@ TEST_F(GameControllerFixture, readInputAndComputeSolutionCorrectly)
   ASSERT_TRUE(sut_->readInput());
   ASSERT_TRUE(!sut_->computeSolution().empty());
 }
+
+TEST_F(GameControllerFixture, fivePacsScenario)
+{
+  std::ifstream game_data(test_data_dir_ + "35_15_map_5rounds.dat");
+  sut_.reset(new GameController(game_data));
+  ASSERT_TRUE(sut_->readInput());
+  ASSERT_TRUE(!sut_->computeSolution().empty());
+  ASSERT_TRUE(sut_->readInput());
+  ASSERT_TRUE(!sut_->computeSolution().empty());
+  ASSERT_TRUE(sut_->readInput());
+  ASSERT_TRUE(!sut_->computeSolution().empty());
+  ASSERT_TRUE(sut_->readInput());
+  ASSERT_TRUE(!sut_->computeSolution().empty());
+  ASSERT_TRUE(sut_->readInput());
+  ASSERT_TRUE(!sut_->computeSolution().empty());
+}
